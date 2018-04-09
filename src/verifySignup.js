@@ -12,6 +12,11 @@ const {
 } = require('./helpers');
 
 module.exports.verifySignupWithLongToken = function (options, verifyToken) {
+  const twoStepsVerify = options.twoSteps || false;
+  if (twoStepsVerify) {
+    throw new errors.BadRequest('Two steps verify api needed.(authManagement)',
+      { errors: { $className: 'badParam' } });
+  }
   return Promise.resolve()
     .then(() => {
       ensureValuesAreStrings(verifyToken);
@@ -21,12 +26,32 @@ module.exports.verifySignupWithLongToken = function (options, verifyToken) {
 };
 
 module.exports.verifySignupWithShortToken = function (options, verifyShortToken, identifyUser) {
+  const twoStepsVerify = options.twoSteps || false;
+  if (twoStepsVerify) {
+    throw new errors.BadRequest('Two steps verify api needed.(authManagement)',
+      { errors: { $className: 'badParam' } });
+  }
+
   return Promise.resolve()
     .then(() => {
       ensureValuesAreStrings(verifyShortToken);
       ensureObjPropsValid(identifyUser, options.identifyUserProps);
 
       return verifySignup(options, identifyUser, { verifyShortToken });
+    });
+};
+
+module.exports.verifySignupTwoSteps = function (options, verifyLongToken, verifyShortToken) {
+  return Promise.resolve()
+    .then(() => {
+      ensureValuesAreStrings(verifyLongToken);
+      ensureValuesAreStrings(verifyShortToken);
+
+      return verifySignup(
+        options,
+        { verifyToken:verifyLongToken },
+        { verifyToken:verifyLongToken, verifyShortToken: verifyShortToken}
+        );
     });
 };
 
