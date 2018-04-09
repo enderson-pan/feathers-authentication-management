@@ -35,6 +35,7 @@ module.exports.addVerification = path => hook => {
       hook.data.verifyToken = longToken;
       hook.data.verifyShortToken = shortToken;
       hook.data.verifyChanges = {};
+      hook.data.tryLimit = 3;
 
       return hook;
     })

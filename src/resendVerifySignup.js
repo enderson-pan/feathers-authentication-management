@@ -42,7 +42,8 @@ module.exports = function resendVerifySignup (options, identifyUser, notifierOpt
         isVerified: false,
         verifyExpires: Date.now() + options.delay,
         verifyToken: longToken,
-        verifyShortToken: shortToken
+        verifyShortToken: shortToken,
+        tryLimit: 5
       })
     )
     .then(user => notifier(options.notifier, 'resendVerifySignup', user, notifierOptions))
