@@ -32,6 +32,12 @@ function AuthManagement (app) { // eslint-disable-line no-unused-vars
     value: { user: identifyUser, token: verifyShortToken }
   }, {});
 
+  // Verify user using both long token and short token.
+  this.verifyTowSteps = (verifyLongToken, verifyShortToken, identifyUser) => authManagement.create({
+    action: 'verifySignupTwoSteps',
+    value: { user:identifyUser, longToken: verifyLongToken, shortToken:verifyShortToken}
+  }, {});
+
   this.sendResetPwd = (identifyUser, notifierOptions) => authManagement.create({
     action: 'sendResetPwd',
     value: identifyUser,

@@ -6,7 +6,11 @@ const debug = require('debug')('authManagement:main');
 
 const checkUniqueness = require('./checkUniqueness');
 const resendVerifySignup = require('./resendVerifySignup');
-const { verifySignupWithLongToken, verifySignupWithShortToken } = require('./verifySignup');
+const {
+  verifySignupWithLongToken,
+  verifySignupWithShortToken,
+  verifySignupTwoSteps
+} = require('./verifySignup');
 const sendResetPwd = require('./sendResetPwd');
 const { resetPwdWithLongToken, resetPwdWithShortToken } = require('./resetPassword');
 const passwordChange = require('./passwordChange');
@@ -25,6 +29,7 @@ const optionsDefault = {
   resetDelay: 1000 * 60 * 60 * 2, // 2 hours
   delay: 1000 * 60 * 60 * 24 * 5, // 5 days
   identifyUserProps: ['email'],
+  twoSteps: false,  // two steps means using long token verify at the first, and then short token verify.
   sanitizeUserForClient
 };
 
@@ -54,6 +59,8 @@ function authManagement (options, app) { // 'function' needed as we use 'this'
           return verifySignupWithLongToken(options, data.value);
         case 'verifySignupShort':
           return verifySignupWithShortToken(options, data.value.token, data.value.user);
+        case 'verifySignupTwoSteps':
+          return verifySignupTwoSteps(options, data.value.longToken, data.value.shortToken, data.value.user);
         case 'sendResetPwd':
           return sendResetPwd(options, data.value, data.notifierOptions);
         case 'resetPwdLong':

@@ -29,10 +29,13 @@ module.exports.addVerification = path => hook => {
       }
 
       hook.data.isVerified = false;
+      hook.data.isVerifiedLongToken = false;
+      hook.data.isVerifiedShortToken = false;
       hook.data.verifyExpires = Date.now() + options.delay;
       hook.data.verifyToken = longToken;
       hook.data.verifyShortToken = shortToken;
       hook.data.verifyChanges = {};
+      hook.data.tryLimit = 3;
 
       return hook;
     })

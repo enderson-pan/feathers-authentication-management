@@ -12,6 +12,12 @@ const {
 } = require('./helpers');
 
 module.exports.verifySignupWithLongToken = function (options, verifyToken) {
+  const twoStepsVerify = options.twoSteps || false;
+  if (twoStepsVerify) {
+    throw new errors.BadRequest('Two steps verify api needed.(authManagement)',
+      { errors: { $className: 'badParam' } });
+  }
+
   return Promise.resolve()
     .then(() => {
       ensureValuesAreStrings(verifyToken);
@@ -21,12 +27,34 @@ module.exports.verifySignupWithLongToken = function (options, verifyToken) {
 };
 
 module.exports.verifySignupWithShortToken = function (options, verifyShortToken, identifyUser) {
+  const twoStepsVerify = options.twoSteps || false;
+  if (twoStepsVerify) {
+    throw new errors.BadRequest('Two steps verify api needed.(authManagement)',
+      { errors: { $className: 'badParam' } });
+  }
+
   return Promise.resolve()
     .then(() => {
       ensureValuesAreStrings(verifyShortToken);
       ensureObjPropsValid(identifyUser, options.identifyUserProps);
 
       return verifySignup(options, identifyUser, { verifyShortToken });
+    });
+};
+
+module.exports.verifySignupTwoSteps = function (options, verifyLongToken, verifyShortToken, identifyUser) {
+  const verifyToken = verifyLongToken;
+  return Promise.resolve()
+    .then(() => {
+      ensureValuesAreStrings(verifyToken);
+      ensureValuesAreStrings(verifyShortToken);
+      ensureObjPropsValid(identifyUser, options.identifyUserProps);
+
+      return verifySignup(
+        options,
+        identifyUser,
+        { verifyToken, verifyShortToken }
+        );
     });
 };
 
@@ -42,6 +70,19 @@ function verifySignup (options, query, tokens) {
     .then(data => getUserData(data, ['isNotVerifiedOrHasVerifyChanges', 'verifyNotExpired']))
     .then(user => {
       if (!Object.keys(tokens).every(key => tokens[key] === user[key])) {
+        if (user.tryLimit > 0) {
+          --user.tryLimit;
+          const patchToUser = Object.assign({}, {
+            tryLimit: user.tryLimit
+          });
+
+          return patchUser(user, patchToUser)
+            .then(() => {
+              throw new errors.BadRequest(`Invalid token. left ${user.tryLimit} try times. (authManagement)`,
+                { errors: { $className: 'badParam' } });
+            });
+        }
+
         return eraseVerifyProps(user, user.isVerified)
           .then(() => {
             throw new errors.BadRequest('Invalid token. Get for a new one. (authManagement)',
@@ -60,6 +101,7 @@ function verifySignup (options, query, tokens) {
       verifyToken: null,
       verifyShortToken: null,
       verifyExpires: null,
+      tryLimit: null,
       verifyChanges: {}
     });
 
